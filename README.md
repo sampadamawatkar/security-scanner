@@ -97,3 +97,5 @@ security-scanner/
 - Automate build/deploy through the Jenkins pipeline already configured
 - Add authentication before exposing the dashboard beyond a local network
 - Support additional scan types (nikto, dirb) alongside nmap
+## Author
+Sampada Manwatkar
