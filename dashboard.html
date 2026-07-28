@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>AI Security Scanner</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@500;700&display=swap');
+
+  :root {
+    --bg: #0b0f0d;
+    --panel: #101613;
+    --line: #1f2a25;
+    --green: #3ddc84;
+    --green-dim: #1f7a4a;
+    --amber: #e8a33d;
+    --red: #e8543d;
+    --text: #d7e0da;
+    --text-dim: #6f8177;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    margin: 0;
+    padding: 40px 20px;
+    min-height: 100vh;
+  }
+
+  .wrap { max-width: 760px; margin: 0 auto; }
+
+  header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 16px;
+    margin-bottom: 28px;
+  }
+
+  h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    margin: 0;
+    color: #eef5f0;
+    letter-spacing: -0.02em;
+  }
+  h1 span { color: var(--green); }
+
+  .tag {
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 0.08em;
+  }
+
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+
+  label {
+    display: block;
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+    letter-spacing: 0.04em;
+  }
+
+  .row { display: flex; gap: 10px; }
+
+  input {
+    flex: 1;
+    background: #0d1310;
+    border: 1px solid var(--line);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    padding: 11px 13px;
+    border-radius: 4px;
+    outline: none;
+  }
+  input:focus { border-color: var(--green-dim); }
+
+  button {
+    background: var(--green);
+    color: #06120a;
+    border: none;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    font-size: 13px;
+    padding: 11px 22px;
+    border-radius: 4px;
+    cursor: pointer;
+    letter-spacing: 0.02em;
+  }
+  button:hover { background: #4fe896; }
+  button:disabled { background: var(--green-dim); cursor: not-allowed; color: #cdeee0; }
+
+  .config {
+    display: flex;
+    gap: 16px;
+    margin-top: 14px;
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+  .config input {
+    font-size: 11px;
+    padding: 6px 9px;
+    flex: none;
+    width: 220px;
+  }
+  .config div { display: flex; align-items: center; gap: 8px; }
+
+  #status {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-top: 12px;
+    min-height: 16px;
+  }
+  #status.err { color: var(--red); }
+  #status.ok { color: var(--green); }
+
+  .dots::after {
+    content: '';
+    animation: dots 1.2s steps(4, end) infinite;
+  }
+  @keyframes dots { 0%{content:''} 25%{content:'.'} 50%{content:'..'} 75%{content:'...'} }
+
+  #results { display: none; }
+
+  .meta {
+    display: flex;
+    gap: 24px;
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-bottom: 16px;
+  }
+  .meta b { color: var(--text); }
+
+  .section-label {
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--green);
+    margin-bottom: 10px;
+    text-transform: uppercase;
+  }
+
+  pre {
+    background: #0d1310;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 16px;
+    font-size: 12.5px;
+    line-height: 1.6;
+    color: #b7c4bc;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+    margin: 0;
+  }
+
+  .report {
+    font-size: 13.5px;
+    line-height: 1.75;
+    white-space: pre-wrap;
+  }
+  .report strong { color: #eef5f0; }
+
+  details summary {
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-top: 4px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>scan<span>://</span>ai</h1>
+    <div class="tag">LOCAL AI VULNERABILITY SCANNER</div>
+  </header>
+
+  <div class="panel">
+    <label for="target">TARGET (IP or hostname)</label>
+    <div class="row">
+      <input id="target" type="text" placeholder="192.168.141.134" value="192.168.141.134">
+      <button id="scanBtn" onclick="runScan()">Run scan</button>
+    </div>
+
+    <div class="config">
+      <div>
+        <span>API&nbsp;→</span>
+        <input id="apiUrl" type="text" value="http://localhost:8000">
+      </div>
+    </div>
+
+    <div id="status"></div>
+  </div>
+
+  <div class="panel" id="results">
+    <div class="meta">
+      <span>TARGET <b id="metaTarget">—</b></span>
+      <span>STATUS <b id="metaStatus">—</b></span>
+    </div>
+
+    <div class="section-label">AI analysis</div>
+    <div class="report" id="reportText"></div>
+
+    <details style="margin-top:20px">
+      <summary>Show raw nmap output</summary>
+      <pre id="rawOutput"></pre>
+    </details>
+  </div>
+
+</div>
+
+<script>
+async function runScan() {
+  const target = document.getElementById('target').value.trim();
+  const apiUrl = document.getElementById('apiUrl').value.trim().replace(/\/$/, '');
+  const btn = document.getElementById('scanBtn');
+  const status = document.getElementById('status');
+  const results = document.getElementById('results');
+
+  if (!target) {
+    status.textContent = 'Enter a target IP or hostname first.';
+    status.className = 'err';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Scanning...';
+  results.style.display = 'none';
+  status.className = '';
+  status.innerHTML = 'Running nmap + AI analysis, this can take up to a minute<span class="dots"></span>';
+
+  try {
+    const res = await fetch(`${apiUrl}/scan`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ target })
+    });
+
+    if (!res.ok) {
+      const errBody = await res.json().catch(() => ({}));
+      throw new Error(errBody.detail || `Request failed with status ${res.status}`);
+    }
+
+    const data = await res.json();
+
+    document.getElementById('metaTarget').textContent = data.target;
+    document.getElementById('metaStatus').textContent = 'complete';
+    document.getElementById('reportText').textContent = data.ai_report;
+    document.getElementById('rawOutput').textContent = data.raw_scan;
+
+    results.style.display = 'block';
+    status.textContent = 'Scan complete.';
+    status.className = 'ok';
+  } catch (err) {
+    status.textContent = `Error: ${err.message}`;
+    status.className = 'err';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Run scan';
+  }
+}
+
+document.getElementById('target').addEventListener('keydown', e => {
+  if (e.key === 'Enter') runScan();
+});
+</script>
+</body>
+</html>
